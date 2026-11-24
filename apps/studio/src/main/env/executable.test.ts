@@ -99,6 +99,14 @@ describe('host executable security', () => {
     expect(hostExecutable('npm', project, { PATH }, 'win32')).toBeUndefined();
   });
 
+  it('a cwd of the filesystem root still resolves host programs', () => {
+    const { trusted } = fixture();
+    const binary = join(trusted, 'studio-probe');
+    writeFileSync(binary, '#!/bin/sh\nprintf trusted\n');
+    chmodSync(binary, 0o755);
+    expect(hostExecutable('studio-probe', '/', { PATH: trusted })).toBe(binary);
+  });
+
   it('Windows preserves explicit trusted absolute executable overrides', () => {
     const { project, trusted } = fixture();
     const binary = join(trusted, 'npm');

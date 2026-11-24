@@ -1,9 +1,11 @@
 import { accessSync, constants, realpathSync, statSync } from 'node:fs';
-import { delimiter, isAbsolute, join, relative, sep } from 'node:path';
+import { delimiter, isAbsolute, join, parse, relative, sep } from 'node:path';
 import type { Env } from './shell-env.js';
 import { hostPlatform, isWindows } from './platform.js';
 
 function within(root: string, path: string): boolean {
+  // Launched from Finder, `cwd` is the filesystem root, and every PATH entry is "inside" it: the app would resolve no host program at all.
+  if (parse(root).root === root) return false;
   const part = relative(root, path);
   return part === '' || (!isAbsolute(part) && part !== '..' && !part.startsWith(`..${sep}`));
 }
