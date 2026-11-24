@@ -122,6 +122,7 @@ import type { TaskManagerAction, TaskManagerSnapshot } from './task-manager.js';
 import type { DebugAgentFrames, DebugAgentFramesRequest, DebugCaptureFrame, DebugCaptureFrameRequest, DebugState } from './debug.js';
 import type { CaptureViewAnswer, CaptureViewRequest } from './capture-view.js';
 import type { CodexSetupState } from './codex.js';
+import type { PiSetupState } from './pi.js';
 import type { ClaudeSetupState, ClaudeStatusRequest, SetupEntryPoint } from './claude-setup.js';
 import type { UpdateState } from './update.js';
 import type {
@@ -224,6 +225,9 @@ export const CHANNELS = {
     codexInstall: { name: 'codex:install', from: TAB, request: none, response: of<{ accepted: boolean }>(), tab: 'codexInstall' },
     codexSignIn: { name: 'codex:signIn', from: TAB, request: optionalOrNull<{ entryPoint?: SetupEntryPoint; browserId?: string }>(), response: of<{ accepted: boolean }>(), tab: 'codexSignIn' },
     codexSignInCancel: { name: 'codex:signInCancel', from: TAB, request: none, response: of<void>(), tab: 'codexSignInCancel' },
+    piStatus: { name: 'pi:status', from: TAB, request: none, response: of<PiSetupState>(), tab: 'piStatus' },
+    /** Re-runs the binary lookup and version preflight; a call while one runs joins it. */
+    piCheck: { name: 'pi:check', from: TAB, request: none, response: of<PiSetupState>(), tab: 'piCheck' },
     claudeStatus: { name: 'claude:status', from: TAB, request: optional<ClaudeStatusRequest>(), response: of<ClaudeSetupState>(), tab: 'claudeStatus' },
     claudeSignIn: { name: 'claude:signIn', from: TAB, request: one<{ entryPoint: SetupEntryPoint; browserId?: string }>(), response: of<{ accepted: boolean }>(), tab: 'claudeSignIn' },
     claudeOpenPageAgain: { name: 'claude:openPageAgain', from: TAB, request: none, response: of<{ accepted: boolean }>(), tab: 'claudeOpenPageAgain' },
@@ -411,6 +415,7 @@ export const CHANNELS = {
     codeWritten: { name: 'code:written', payload: of<CodeWrittenReport>(), tab: 'onCodeWritten' },
     updateState: { name: 'update:state', payload: of<UpdateState>(), tab: 'onUpdateState', chrome: 'onUpdateState' },
     codexState: { name: 'codex:state', payload: of<CodexSetupState>(), tab: 'onCodexState' },
+    piState: { name: 'pi:state', payload: of<PiSetupState>(), tab: 'onPiState' },
     claudeState: { name: 'claude:state', payload: of<ClaudeSetupState>(), tab: 'onClaudeState' },
     authChanged: { name: 'auth:changed', payload: of<StudioIdentity>(), tab: 'onAuthChanged' },
     telemetryIdentityChanged: { name: 'telemetry:identity-changed', payload: of<TelemetryConfig>(), tab: 'onTelemetryIdentityChanged' },

@@ -19,11 +19,11 @@ export interface MachineSnapshot {
 export type MachineInstallResult = 'installed' | 'failed' | 'unsupported';
 
 /** A destination main opens on the person's behalf. The renderer names the place, never a URL or a path. */
-export const MACHINE_HELP_IDS = ['developer-tools', 'activity-monitor', 'claude', 'chatgpt'] as const;
+export const MACHINE_HELP_IDS = ['developer-tools', 'activity-monitor', 'claude', 'chatgpt', 'pi'] as const;
 export type MachineHelpId = typeof MACHINE_HELP_IDS[number];
 
 /** Where a prompt gets pasted: the agent's own app when it is installed, its site otherwise. */
-export const MACHINE_AGENT_HELP: Record<HarnessId, MachineHelpId> = { claude: 'claude', codex: 'chatgpt' };
+export const MACHINE_AGENT_HELP: Record<HarnessId, MachineHelpId> = { claude: 'claude', codex: 'chatgpt', pi: 'pi' };
 
 export function machineHasFailure(checks: readonly MachineCheck[]): boolean {
   return checks.some((check) => check.status === 'failed');

@@ -39,7 +39,7 @@ describe('the Harness descriptors', () => {
   });
 
   it('lists the stored names Claude first', () => {
-    expect(STORED_HARNESSES).toEqual(['claude', 'appserver']);
+    expect(STORED_HARNESSES).toEqual(['claude', 'appserver', 'pi']);
   });
 
   it('agrees with the shared attachment classifier on PDFs', () => {

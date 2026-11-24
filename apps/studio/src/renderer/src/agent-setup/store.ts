@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import {
   IDLE_CLAUDE_SETUP_STATE,
   IDLE_CODEX_SETUP_STATE,
+  IDLE_PI_SETUP_STATE,
   type ClaudeSetupState,
   type ClaudeStatusRequest,
   type CodexSetupState,
   type HarnessId,
+  type PiSetupState,
   type SetupEntryPoint,
   CODE_MAX_LENGTH,
   sanitizeCode,
@@ -35,6 +37,7 @@ export interface AgentSetupState {
   claude: ClaudeSetupState;
   claudeSettled: ClaudeSetupState | undefined;
   codex: CodexSetupState;
+  pi: PiSetupState;
   code: string;
   codexSignInAttempted: boolean;
   touched: Record<HarnessId, boolean>;
@@ -46,6 +49,8 @@ export interface AgentSetupState {
 interface AgentSetupStore extends AgentSetupState {
   applyClaude: (next: ClaudeSetupState, viaTap?: boolean) => void;
   applyCodex: (next: CodexSetupState, viaTap?: boolean) => void;
+  applyPi: (next: PiSetupState) => void;
+  checkPi: () => Promise<void>;
   tapClaude: (entryPoint: SetupEntryPoint) => Promise<void>;
   signInClaude: (entryPoint: SetupEntryPoint, browserId?: string) => Promise<void>;
   openPageAgain: () => Promise<void>;
@@ -79,12 +84,13 @@ const INITIAL: AgentSetupState = {
   claude: IDLE_CLAUDE_SETUP_STATE,
   claudeSettled: undefined,
   codex: IDLE_CODEX_SETUP_STATE,
+  pi: IDLE_PI_SETUP_STATE,
   code: '',
   codexSignInAttempted: false,
-  touched: { claude: false, codex: false },
+  touched: { claude: false, codex: false, pi: false },
   lastConnected: null,
-  requests: { claude: IDLE_REQUESTS, codex: IDLE_REQUESTS },
-  inFlight: { claude: IDLE_FLIGHT, codex: IDLE_FLIGHT },
+  requests: { claude: IDLE_REQUESTS, codex: IDLE_REQUESTS, pi: IDLE_REQUESTS },
+  inFlight: { claude: IDLE_FLIGHT, codex: IDLE_FLIGHT, pi: IDLE_FLIGHT },
 };
 
 function nextLastConnected(
@@ -281,11 +287,29 @@ export const useAgentSetupStore = create<AgentSetupStore>()((set, get) => {
     resetTouched: () => {
       invalidate('claude');
       invalidate('codex');
-      set({ touched: { claude: false, codex: false }, lastConnected: null, code: '', codexSignInAttempted: false });
+      invalidate('pi');
+      set({ touched: { claude: false, codex: false, pi: false }, lastConnected: null, code: '', codexSignInAttempted: false });
+    },
+
+    applyPi: (next) => {
+      set({ pi: next });
+    },
+
+    checkPi: async () => {
+      const request = start('pi', 'check');
+      try {
+        const next = await studio().piCheck();
+        if (ownsReply('pi', request)) get().applyPi(next);
+      } catch {
+        return;
+      } finally {
+        finish('pi', request);
+      }
     },
 
     prime: async () => {
-      await Promise.all([detectClaude({}, undefined, false), detectCodex(undefined, false)]);
+      const piPrime = studio().piStatus().then((next) => get().applyPi(next)).catch(() => undefined);
+      await Promise.all([detectClaude({}, undefined, false), detectCodex(undefined, false), piPrime]);
     },
   };
 });
@@ -298,16 +322,20 @@ export function primeAgentSetup(): Promise<void> {
 }
 
 export function subscribeToAgentSetup(): () => void {
-  const { applyClaude, applyCodex } = useAgentSetupStore.getState();
+  const { applyClaude, applyCodex, applyPi } = useAgentSetupStore.getState();
   const offClaude = studio().onClaudeState((state) => {
     applyClaude(state);
   });
   const offCodex = studio().onCodexState((state) => {
     applyCodex(state);
   });
+  const offPi = studio().onPiState((state) => {
+    applyPi(state);
+  });
   return () => {
     offClaude();
     offCodex();
+    offPi();
   };
 }
 

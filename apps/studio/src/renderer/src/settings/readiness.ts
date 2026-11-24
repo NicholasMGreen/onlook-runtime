@@ -1,4 +1,4 @@
-import { type ClaudeSetupDetail, type ClaudeSetupStatus, claudeDetailNeedsSignIn, type CodexSetupStatus, type HarnessId } from '@studio/events';
+import { type ClaudeSetupDetail, type ClaudeSetupStatus, claudeDetailNeedsSignIn, type CodexSetupStatus, type HarnessId, type PiSetupStatus } from '@studio/events';
 
 export type Readiness = 'ready' | 'not-installed' | 'not-signed-in' | 'sign-in-incomplete' | 'needs-attention' | 'checking';
 
@@ -64,12 +64,29 @@ export function codexReadiness(status: CodexSetupStatus): Readiness {
   }
 }
 
+function piReadiness(status: PiSetupStatus = 'idle'): Readiness {
+  switch (status) {
+    case 'checking':
+      return 'checking';
+    case 'ready':
+      return 'ready';
+    case 'idle':
+    case 'missing':
+    case 'outdated':
+    case 'broken':
+      return 'not-installed';
+    default:
+      return unknownStatus(status);
+  }
+}
+
 export function readinessByHarness(
   claude: ClaudeSetupStatus,
   codex: CodexSetupStatus,
   claudeDetail?: ClaudeSetupDetail,
+  pi: PiSetupStatus = 'idle',
 ): Record<HarnessId, Readiness> {
-  return { claude: claudeReadiness(claude, claudeDetail), codex: codexReadiness(codex) };
+  return { claude: claudeReadiness(claude, claudeDetail), codex: codexReadiness(codex), pi: piReadiness(pi) };
 }
 
 export function offersSetUp(readiness: Readiness): boolean {

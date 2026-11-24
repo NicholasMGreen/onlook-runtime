@@ -40,6 +40,7 @@ const agentStateListeners = new Set<Parameters<StudioBridge['onAgentState']>[0]>
 const LAB_SETTINGS_DEFAULTS: SettingsDefaults = {
   claude: { models: [] },
   codex: { models: [] },
+  pi: { models: [] },
 };
 
 const noop = (): void => {};
@@ -139,6 +140,8 @@ let storedImageSeq = 0;
 
 const answers: Omit<StudioBridge, Inert> & Partial<Pick<StudioBridge, Inert>> = {
   githubStars: async () => null,
+  piStatus: async () => ({ status: 'idle' }),
+  piCheck: async () => ({ status: 'idle' }),
   githubImport: async () => ({ enabled: false, connection: { status: 'disconnected' }, repositories: [], branches: [], phase: 'idle', progress: 0 }),
   appInfo: async () => ({
     version: '0.0.0-lab',

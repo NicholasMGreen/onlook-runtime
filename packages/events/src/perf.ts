@@ -130,6 +130,7 @@ export const PROCESS_CLASSES = [
   'dev_server',
   'claude_cli',
   'codex',
+  'pi',
   'terminal',
   'other',
 ] as const;

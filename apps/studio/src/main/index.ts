@@ -32,6 +32,7 @@ import { registerIpcHandlers } from './ipc.js';
 import { installApplicationMenu } from './menu/index.js';
 import { registerLocationHandlers } from './location/index.js';
 import { registerCodexHost, startCodexBootPreCheck } from './codex/index.js';
+import { registerPiHost, startPiBootPreCheck } from './pi/index.js';
 import { registerOnboardingHandlers } from './onboarding/index.js';
 import { registerAppCommandHandlers } from './app-commands/index.js';
 import { registerTaskManagerHandlers } from './task-manager/window.js';
@@ -348,6 +349,8 @@ void app.whenReady().then(() => {
   registerUpdaterHandlers();
   registerCodexHost({ onState: (state) => noteCodexSetupChanged(state.status) });
   startCodexBootPreCheck();
+  registerPiHost();
+  startPiBootPreCheck();
   registerClaudeHost({ onState: (state, meta) => noteClaudeSetupChanged(state, meta) });
   registerTelemetryHandlers();
   registerDevErrorHook();

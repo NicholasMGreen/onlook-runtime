@@ -23,7 +23,7 @@ describe('DefaultAgentRow', () => {
       it(`${agent} ${readiness} shows its status and action`, () => {
         const markup = renderToStaticMarkup(createElement(DefaultAgentRow, {
           value: agent,
-          readiness: { claude: 'sign-in-incomplete', codex: 'not-signed-in', [agent]: readiness },
+          readiness: { claude: 'sign-in-incomplete', codex: 'not-signed-in', pi: 'not-installed', [agent]: readiness },
           onChange: () => {},
           onSetUp: () => {},
         }));

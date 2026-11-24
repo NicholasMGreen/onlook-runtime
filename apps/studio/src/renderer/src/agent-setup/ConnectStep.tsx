@@ -95,7 +95,7 @@ export function ConnectStep({ entryPoint, onContinue, hasBack, onBack, onSkip, a
   const close = useCallback((): void => setOpen(null), []);
 
   const facts: ConnectFacts = { claude, claudeSettled, codex, codexSignInAttempted, touched };
-  const connected = (['claude', 'codex'] as const).filter((harness) => markFor(harness === 'claude' ? claudeTileState(facts) : codexTileState(facts)) === 'connected');
+  const connected: HarnessId[] = (['claude', 'codex'] as const).filter((harness) => markFor(harness === 'claude' ? claudeTileState(facts) : codexTileState(facts)) === 'connected');
   const firstConnected = connected[0];
   useEffect(() => {
     if (first === undefined && firstConnected !== undefined) setFirst(firstConnected);

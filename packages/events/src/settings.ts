@@ -11,6 +11,8 @@ export interface SettingsState {
   notificationSound?: NotificationSoundPreference;
   /** Absent means no default anywhere; never inferred into `claude`, so the pane can tell "chose Claude" from "never chose" (ONL-2120). */
   harness?: HarnessId;
+  /** An explicit `pi` binary path, used ahead of the PATH lookup. */
+  piBinary?: string;
   /** Absent means unresolved, so every broadcast carries it and no live view resurrects a resolved card (ONL-2443). */
   discoverCtaResolved?: boolean;
   /** The composer's one-time Tips pill, gone for good once dismissed (ONL-2744). */

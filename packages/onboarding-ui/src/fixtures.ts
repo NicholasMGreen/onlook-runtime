@@ -3,9 +3,9 @@ import type { OnboardingUiStrings } from './strings.js';
 
 /** The copy is the board's, verbatim. */
 export const STUB_STRINGS: OnboardingUiStrings = {
-  harnessName: { claude: 'Claude', codex: 'ChatGPT' },
-  setUp: { claude: 'Set up Claude', codex: 'Set up ChatGPT' },
-  subscription: { claude: 'Claude subscription', codex: 'ChatGPT subscription' },
+  harnessName: { claude: 'Claude', codex: 'ChatGPT', pi: 'Pi' },
+  setUp: { claude: 'Set up Claude', codex: 'Set up ChatGPT', pi: 'Set up Pi' },
+  subscription: { claude: 'Claude subscription', codex: 'ChatGPT subscription', pi: 'Pi (OpenRouter / BYOK / Local)' },
   manage: 'Manage',
   preferred: 'Default',
   makePreferred: 'Make default',
@@ -83,7 +83,7 @@ export const STUB_STRINGS: OnboardingUiStrings = {
         'Copy the line below, paste it into Terminal, and press Return. Come back here when ChatGPT says you are signed in.',
     },
   },
-  dialogHeader: { claude: 'Set up Claude', codex: 'Set up ChatGPT' },
+  dialogHeader: { claude: 'Set up Claude', codex: 'Set up ChatGPT', pi: 'Set up Pi' },
   action: {
     'set-up': 'Set up ChatGPT',
     'sign-in': 'Sign in',
@@ -106,6 +106,7 @@ export const STUB_STRINGS: OnboardingUiStrings = {
   chatLine: {
     claude: 'Please sign in to Claude to continue designing in Onlook',
     codex: 'Please sign in to ChatGPT to continue designing in Onlook',
+    pi: 'Install Pi and configure a provider key to continue designing in Onlook',
   },
   chatSignedIn: 'Signed in as {email}',
   mark: { attention: 'Needs you', connected: 'Connected' },
@@ -117,12 +118,13 @@ export const STUB_STRINGS: OnboardingUiStrings = {
   chooseBrowser: 'Choose a browser',
   runtimeMissingTitle: 'Claude couldn’t start',
   otherAgent: {
-    label: { claude: 'Use Claude instead', codex: 'Use ChatGPT instead' },
+    label: { claude: 'Use Claude instead', codex: 'Use ChatGPT instead', pi: 'Use Pi instead' },
     needs: {
       claude: 'Needs a Claude Pro or Max plan. You sign in once in your browser.',
       codex: 'Needs a ChatGPT plan. Onlook downloads its agent and you sign in.',
+      pi: 'Needs Pi installed on your machine with an API key or local model.',
     },
-    ready: { claude: 'Claude is set up on this Mac.', codex: 'ChatGPT is set up on this Mac.' },
+    ready: { claude: 'Claude is set up on this Mac.', codex: 'ChatGPT is set up on this Mac.', pi: 'Pi is set up on this machine.' },
     setUp: 'Set up',
     use: 'Use',
   },

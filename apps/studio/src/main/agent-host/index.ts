@@ -119,6 +119,7 @@ import { noteSetupEvent, noteSetupParked, noteSetupReport, noteSetupStreaming, n
 import { setProjectHarness, workspaceOrigin } from '../workspace/store.js';
 import { isRemovingProject } from '../workspace/remove-project.js';
 import { codexSetupStatus } from '../codex/index.js';
+import { probePiConnection } from '../pi/index.js';
 import { pinnedHarness, readOnboardingState } from '../onboarding/state.js';
 import { broadcastSettingsChanged } from '../settings/changed.js';
 import { probeConnection, probeMemo } from './connection.js';
@@ -171,6 +172,7 @@ import {
   planSession,
   rememberSession,
   storedAppServerThread,
+  storedPiSession,
   storedHarness,
   type SessionHarness,
 } from './sessions.js';
@@ -211,6 +213,7 @@ import { saveAttachment } from '../images/save-attachment.js';
 import type { AgentBackend, BackendState, ModelPick } from './backend.js';
 import { SessionMap } from './session-map.js';
 import { codexRoot, createAppServerSession, selectedHarness } from './appserver/index.js';
+import { createPiSession } from './pi/index.js';
 import { bindProjectHarness, hasAgentAnswer, projectHarness } from './project-harness.js';
 import { hasUserMessage } from './user-message.js';
 import { devSwitches } from '../env/dev-switches.js';
@@ -823,7 +826,7 @@ export class AgentHost {
 
   /** `probed` may be codex's after a default flip; deriving Claude's banner from it stamps a codex miss `claude`. */
   private claudeProbe(): AgentConnection | undefined {
-    return this.probed?.harness === 'codex' ? undefined : this.probed;
+    return this.probed?.harness === 'codex' || this.probed?.harness === 'pi' ? undefined : this.probed;
   }
 
   async probe(req: AgentProbeRequest = {}, cwd?: string): Promise<AgentConnection> {
@@ -840,7 +843,9 @@ export class AgentHost {
       const runtime = runtimeOfAsker ?? this.defaultHarness();
       const result = await (runtime === 'appserver'
         ? Promise.resolve(probeCodexConnection(codexSetupStatus(), codexRoot()))
-        : probeConnection());
+        : runtime === 'pi'
+          ? probePiConnection()
+          : probeConnection());
       this.probed = result;
       this.emitMachine(result, runtime);
       return result;
@@ -1290,14 +1295,23 @@ export class AgentHost {
     const harness = storedHarness(projectHarness(cwd));
 
     // A resume restores the conversation into the model only; the transcript is ours (ONL-1913).
-    const plan = harness === 'appserver' ? ({ kind: 'appserver' } as const) : await planSession(cwd);
+    const plan =
+      harness === 'appserver'
+        ? ({ kind: 'appserver' } as const)
+        : harness === 'pi'
+          ? ({ kind: 'pi' } as const)
+          : await planSession(cwd);
     await holdStartForProof(cwd);
     // The tab may have closed while this planned (ONL-2264).
     if (!this.isWanted(cwd)) return;
 
     // A resume keeps its own record; a read that fails starts on defaults (ONL-2183).
     const isResume =
-      plan.kind === 'appserver' ? storedAppServerThread(cwd) !== undefined : plan.kind === 'resume';
+      plan.kind === 'appserver'
+        ? storedAppServerThread(cwd) !== undefined
+        : plan.kind === 'pi'
+          ? storedPiSession(cwd) !== undefined
+          : plan.kind === 'resume';
     const preference = ((): ChatPreference => {
       try {
         return (isResume ? preferenceFor(cwd, harness) : seedPreference(cwd, harness)) ?? {};
@@ -1664,6 +1678,34 @@ export class AgentHost {
       return;
     }
 
+    if (plan.kind === 'pi') {
+      const restoredPi = readTranscript(cwd, 'pi');
+      const piSession = createPiSession({
+        cwd,
+        ...(model === undefined ? {} : { model }),
+        ...effort,
+        ...(restoredPi.length > 0 ? { restored: restoredPi } : {}),
+        workspace: names,
+        ...starter,
+        studioSinks,
+        onEvent,
+        onState: emitState,
+        onConnection: emitConnection,
+      });
+      const piRef: AgentSessionRef = {
+        repoIdentity: workspace.repoIdentity,
+        sessionId: piSession.id,
+        harness,
+      };
+      recordAgentSessionStarted(piRef, {
+        ...(model === undefined ? {} : { model }),
+        isAuthenticated: null,
+      });
+      adopt(piSession);
+      if (restoredPi.length === 0) piSession.welcome(names);
+      return;
+    }
+
     const session = new AgentSession({
       cwd,
       model,
@@ -1942,6 +1984,7 @@ export function diagnosticArtifactTool(request: DebugArtifactToolRequest): Promi
 export async function sessionResumable(cwd: string): Promise<boolean> {
   const harness = storedHarness(projectHarness(cwd));
   if (harness === 'appserver') return storedAppServerThread(cwd) !== undefined;
+  if (harness === 'pi') return storedPiSession(cwd) !== undefined;
   const plan = await planSession(cwd);
   return plan.kind === 'resume';
 }

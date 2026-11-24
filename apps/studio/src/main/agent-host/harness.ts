@@ -46,13 +46,25 @@ export const HARNESSES = {
     grantsFollowProviderThread: true,
     skillsCarryPath: true,
   },
+  pi: {
+    id: 'pi',
+    stored: 'pi',
+    telemetry: 'pi',
+    executable: 'pi',
+    processClass: 'pi',
+    pdfAttachments: false,
+    reportsPromptChars: false,
+    countsRetryAttempts: false,
+    grantsFollowProviderThread: false,
+    skillsCarryPath: false,
+  },
 } as const satisfies Record<HarnessId, HarnessFacts>;
 
 export type Harness = (typeof HARNESSES)[HarnessId];
 
-const ALL = [HARNESSES.claude, HARNESSES.codex] as const;
+const ALL = [HARNESSES.claude, HARNESSES.codex, HARNESSES.pi] as const;
 
-export const STORED_HARNESSES = [HARNESSES.claude.stored, HARNESSES.codex.stored] as const;
+export const STORED_HARNESSES = [HARNESSES.claude.stored, HARNESSES.codex.stored, HARNESSES.pi.stored] as const;
 
 /** A name no Harness answers to reads as Claude, as an absent choice does (ONL-2120). */
 export function harnessFor(id: HarnessId): Harness {

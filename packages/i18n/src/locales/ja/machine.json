@@ -17,6 +17,7 @@
   "machine.unconfirmed.line": "確認できませんでした。このまま続けられます。",
   "machine.open.claude": "Claude を開く",
   "machine.open.chatgpt": "ChatGPT を開く",
+  "machine.open.pi": "Pi を開く",
   "machine.install": "インストール",
   "machine.choose": "フォルダーを選択",
   "machine.fix": "修正",

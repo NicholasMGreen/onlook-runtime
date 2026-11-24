@@ -11,7 +11,7 @@ import { catalogFor, defaultPreference } from '../agent-host/preferences.js';
 import { storedHarness } from '../agent-host/sessions.js';
 import { broadcastToRenderers } from '../tabs/broadcast.js';
 import { resolvedHarness } from './resolve.js';
-import { analyticsEnabled, discoverCtaResolved, tipsPillDismissed, tourSeen, experimentalCodePanel, notificationSoundSettings, notificationSettings } from './state.js';
+import { analyticsEnabled, discoverCtaResolved, tipsPillDismissed, tourSeen, experimentalCodePanel, notificationSoundSettings, notificationSettings, piBinarySetting } from './state.js';
 import { connectorsNoticeDismissed } from './state.js';
 import { storedTipsBaseline, telemetryConsent } from './state.js';
 
@@ -19,6 +19,7 @@ import { storedTipsBaseline, telemetryConsent } from './state.js';
 // whole-domain read would drop the `STUDIO_HARNESS` pin and the onboarding-record fallback (ONL-2120).
 export function settingsState(): SettingsState {
   const harness = resolvedHarness();
+  const piBinary = piBinarySetting();
   const notificationSound = notificationSoundSettings();
   const notifications = notificationSettings();
   const tipsBaseline = storedTipsBaseline();
@@ -29,6 +30,7 @@ export function settingsState(): SettingsState {
     experimentalCodePanel: experimentalCodePanel(),
     ...(notificationSound === undefined ? {} : { notificationSound }),
     ...(harness === undefined ? {} : { harness }),
+    ...(piBinary === undefined ? {} : { piBinary }),
     ...(discoverCtaResolved() ? { discoverCtaResolved: true } : {}),
     ...(tipsPillDismissed() ? { tipsPillDismissed: true } : {}),
     ...(connectorsNoticeDismissed() ? { connectorsNoticeDismissed: true } : {}),
@@ -43,7 +45,7 @@ function defaultsFor(id: HarnessId): HarnessDefaults {
 }
 
 export function settingsDefaults(): SettingsDefaults {
-  return { claude: defaultsFor('claude'), codex: defaultsFor('codex') };
+  return { claude: defaultsFor('claude'), codex: defaultsFor('codex'), pi: defaultsFor('pi') };
 }
 
 export function broadcastSettingsChanged(state: SettingsState = settingsState()): void {

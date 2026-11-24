@@ -17,6 +17,7 @@
   "machine.unconfirmed.line": "未能确认，但仍然可以继续。",
   "machine.open.claude": "打开 Claude",
   "machine.open.chatgpt": "打开 ChatGPT",
+  "machine.open.pi": "打开 Pi",
   "machine.install": "安装",
   "machine.choose": "选择文件夹",
   "machine.fix": "修复",

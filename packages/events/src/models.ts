@@ -72,9 +72,9 @@ export function findModelChoice(
   );
 }
 
-export type HarnessId = 'claude' | 'codex';
+export type HarnessId = 'claude' | 'codex' | 'pi';
 
-export const HARNESS_IDS = ['claude', 'codex'] as const satisfies readonly HarnessId[];
+export const HARNESS_IDS = ['claude', 'codex', 'pi'] as const satisfies readonly HarnessId[];
 
 export function isHarnessId(value: unknown): value is HarnessId {
   return HARNESS_IDS.some((id) => id === value);

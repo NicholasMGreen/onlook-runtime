@@ -36,6 +36,9 @@ export const MODEL_CATALOGS: Record<HarnessId, readonly ModelChoice[]> = {
     { value: 'gpt-5.6', displayName: 'gpt-5.6', supportedEffortLevels: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'] },
     { value: 'gpt-5.5', displayName: 'gpt-5.5', supportedEffortLevels: ['low', 'medium', 'high', 'xhigh'] },
   ],
+  pi: [
+    { value: 'openrouter/anthropic/claude-sonnet-4', displayName: 'Claude Sonnet 4 (OpenRouter)' },
+  ],
 };
 
 export const EMPTY_CATALOG: readonly ModelChoice[] = [];

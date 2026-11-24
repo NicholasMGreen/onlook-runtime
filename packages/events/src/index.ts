@@ -41,6 +41,7 @@ export * from './onboarding.js';
 export * from './panels.js';
 export * from './pen.js';
 export * from './perf.js';
+export * from './pi.js';
 export * from './placement.js';
 export * from './session-state.js';
 export * from './projects.js';

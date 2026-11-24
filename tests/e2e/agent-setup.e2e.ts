@@ -25,7 +25,7 @@ const dialog = (page: Page, harness: HarnessId) =>
 const action = (page: Page, name: string) => page.getByTestId(`${TESTID.setupActionPrefix}${name}`);
 const paste = (page: Page) => page.getByTestId(`${TESTID.signInActionPrefix}paste`);
 
-async function expectSettled(page: Page, harness: HarnessId, state: string): Promise<void> {
+async function expectSettled(page: Page, harness: 'claude' | 'codex', state: string): Promise<void> {
   await expect(settledDialog(page, harness, state)).toBeVisible({ timeout: 15_000 });
 }
 

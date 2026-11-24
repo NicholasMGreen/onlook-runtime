@@ -6,6 +6,7 @@ import { MODEL_CATALOGS } from './fixtures.js';
 const DEFAULTS: SettingsDefaults = {
   claude: { model: 'opus', effort: 'high', models: [...MODEL_CATALOGS.claude] },
   codex: { model: 'gpt-5.5', models: [...MODEL_CATALOGS.codex] },
+  pi: { models: [...MODEL_CATALOGS.pi] },
 };
 
 describe('selectedDefaults', () => {

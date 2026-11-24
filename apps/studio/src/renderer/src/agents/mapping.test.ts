@@ -166,8 +166,8 @@ describe('a failed verification', () => {
 });
 
 describe('the tile marks', () => {
-  const touched = { claude: true, codex: true };
-  const untouched = { claude: false, codex: false };
+  const touched = { claude: true, codex: true, pi: false };
+  const untouched = { claude: false, codex: false, pi: false };
 
   it('paints nothing before a tap, whatever the machine knows (ONL-2186)', () => {
     expect(claudeMark({ claude: claude({ status: 'signed-in' }), touched: untouched })).toBeUndefined();

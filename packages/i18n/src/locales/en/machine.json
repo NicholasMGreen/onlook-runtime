@@ -25,6 +25,7 @@
   "machine.helpUnavailable": "Couldn’t open that. Open it yourself, then check again.",
   "machine.open.claude": "Open Claude",
   "machine.open.chatgpt": "Open ChatGPT",
+  "machine.open.pi": "Open Pi",
   "machine.help.developerTools": "Install them yourself",
   "machine.help.activityMonitor": "Open Activity Monitor",
   "machine.acting.install": "Installing. Your Mac may ask you to confirm.",

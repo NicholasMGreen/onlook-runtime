@@ -56,6 +56,15 @@ function fakeBridge(): {
       codexListener = listener;
       return () => {};
     },
+    onPiState(): () => void {
+      return () => {};
+    },
+    piStatus() {
+      return Promise.resolve({ status: 'idle' as const });
+    },
+    piCheck() {
+      return Promise.resolve({ status: 'idle' as const });
+    },
     claudeStatus(req: ClaudeStatusRequest = {}): Promise<ClaudeSetupState> {
       claudeRequests.push(req);
       calls.push('claudeStatus');
@@ -213,7 +222,7 @@ describe('the boot prime', () => {
     await bridge.answerCodex({ status: 'ready' });
     await primed;
     const state = store();
-    expect(state.touched).toEqual({ claude: false, codex: false });
+    expect(state.touched).toEqual({ claude: false, codex: false, pi: false });
     expect(state.lastConnected).toBeNull();
     expect(claudeMark(state)).toBeUndefined();
     expect(canContinue(state)).toBe(false);
@@ -657,7 +666,7 @@ describe('resetTouched', () => {
     expect(store().lastConnected).toBe('claude');
 
     store().resetTouched();
-    expect(store().touched).toEqual({ claude: false, codex: false });
+    expect(store().touched).toEqual({ claude: false, codex: false, pi: false });
     expect(store().lastConnected).toBeNull();
     expect(store().code).toBe('');
     expect(store().claude.status).toBe('signed-in');

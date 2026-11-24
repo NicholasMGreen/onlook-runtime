@@ -37,6 +37,11 @@ export function settingsHarness(): HarnessId | undefined {
   return HARNESS_IDS.find((candidate) => candidate === value);
 }
 
+export function piBinarySetting(): string | undefined {
+  const value = fields(domain.read()).piBinary;
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
+}
+
 export function discoverCtaResolved(): boolean {
   const state = domain.read() as Partial<SettingsState> | null;
   return state?.discoverCtaResolved === true;

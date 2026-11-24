@@ -104,6 +104,21 @@ export function rememberAppServerThread(cwd: string, threadId: string, model?: s
   }));
 }
 
+export function rememberPiSession(cwd: string, sessionId: string, model?: string): void {
+  if (removedProjects.has(canonicalPath(cwd))) return;
+  domain.update((state) => ({
+    byWorkspace: {
+      ...state.byWorkspace,
+      [harnessKey(cwd, 'pi')]: {
+        sdkSessionId: sessionId,
+        harness: 'pi',
+        ...(model === undefined ? {} : { model }),
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  }));
+}
+
 /** Undebounced, so a failed write throws rather than resuming the chat the user was told was forgotten (ONL-2198). */
 export function forgetSession(cwd: string, harness: SessionHarness): void {
   const key = harnessKey(cwd, harness);
@@ -113,6 +128,13 @@ export function forgetSession(cwd: string, harness: SessionHarness): void {
     delete byWorkspace[key];
     return { byWorkspace };
   });
+}
+
+/** Unvalidated; the caller falls back to a fresh session when Pi refuses to resume it. */
+export function storedPiSession(cwd: string): string | undefined {
+  const stored = domain.read().byWorkspace[harnessKey(cwd, 'pi')];
+  if (!stored || stored.harness !== 'pi') return undefined;
+  return stored.sdkSessionId;
 }
 
 /** Unvalidated; the caller falls back to a fresh thread when `thread/resume` refuses it. */
@@ -131,6 +153,7 @@ export function forgetProjectSessions(cwd: string): void {
   removedProjects.add(canonicalPath(cwd));
   forgetSession(cwd, 'claude');
   forgetSession(cwd, 'appserver');
+  forgetSession(cwd, 'pi');
 }
 
 export function storedClaudeSession(cwd: string): string | undefined {
