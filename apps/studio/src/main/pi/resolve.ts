@@ -5,7 +5,7 @@ import { runChildOutput } from '../env/child.js';
 import { hostExecutable } from '../env/executable.js';
 import { isWindows } from '../env/platform.js';
 import { mergeEnv, userEnv, type Env } from '../env/shell-env.js';
-import { ensurePiAgentDir, piAgentDir } from './paths.js';
+import { ensurePiAgentDir } from './paths.js';
 
 const PROBE_TIMEOUT_MS = 8_000;
 
@@ -76,7 +76,7 @@ export async function probePiBinary(options: ProbePiOptions = {}): Promise<PiSet
 
 export function isolatedPiEnv(baseEnv: Env, cwd: string, extra?: Env): Env {
   return mergeEnv(baseEnv, {
-    PI_CODING_AGENT_DIR: piAgentDir(),
+    PI_CODING_AGENT_DIR: ensurePiAgentDir(),
     PI_NO_TITLE: '1',
     ONLOOK_WORKTREE_ROOT: cwd,
   }, extra);
