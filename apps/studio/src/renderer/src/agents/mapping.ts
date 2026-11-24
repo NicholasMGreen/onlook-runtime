@@ -12,6 +12,7 @@ import {
   type CodexSetupState,
   type CodexSetupStatus,
   type HarnessId,
+  type PiSetupState,
 } from '@studio/events';
 import { fill } from '@studio/chat-ui';
 import {
@@ -347,16 +348,42 @@ export function isCodexConnected(state: CodexSetupState): boolean {
   return state.status === 'ready';
 }
 
+export function isPiConnected(state: PiSetupState | undefined): boolean {
+  return state?.status === 'ready';
+}
+
+export function piSetupState(state: PiSetupState | undefined, opts: { busy?: boolean } = {}): MappedSetup {
+  const busy = opts.busy ?? false;
+  const current = state ?? { status: 'idle' as const };
+  switch (current.status) {
+    case 'idle':
+      return { state: { harness: 'pi', state: 'not-set-up' }, busy };
+    case 'checking':
+      return { state: { harness: 'pi', state: 'checking' }, busy };
+    case 'ready':
+      return { state: { harness: 'pi', state: 'connected', plan: `Pi v${current.version}` }, busy };
+    case 'missing':
+      return { state: { harness: 'pi', state: 'setup-failed', detail: current.detail ?? 'Install @earendil-works/pi-coding-agent so `pi` is on PATH.' }, busy };
+    case 'outdated':
+      return { state: { harness: 'pi', state: 'out-of-date', detail: current.detail ?? `Found Pi v${current.version}.` }, busy };
+    case 'broken':
+      return { state: { harness: 'pi', state: 'wont-start', detail: current.detail ?? 'Pi exited before reporting its version.' }, busy };
+  }
+}
+
 export interface SetupFacts {
   claude: ClaudeSetupState;
   claudeSettled?: ClaudeSetupState | undefined;
   codex: CodexSetupState;
+  pi?: PiSetupState;
   codexSignInAttempted?: boolean;
   touched: Record<HarnessId, boolean>;
 }
 
-export function isConnected(facts: Pick<SetupFacts, 'claude' | 'codex'>, harness: HarnessId): boolean {
-  return harness === 'claude' ? isClaudeConnected(facts.claude) : isCodexConnected(facts.codex);
+export function isConnected(facts: Pick<SetupFacts, 'claude' | 'codex' | 'pi'>, harness: HarnessId): boolean {
+  if (harness === 'claude') return isClaudeConnected(facts.claude);
+  if (harness === 'pi') return isPiConnected(facts.pi);
+  return isCodexConnected(facts.codex);
 }
 
 /** `idle` before a tap whatever the machine knows: a boot-found credential paints nothing (ONL-2186). */
@@ -371,6 +398,13 @@ export function codexTileState(facts: Pick<SetupFacts, 'codex' | 'codexSignInAtt
   const id = codexSetupId(facts.codex, { attemptedSignIn: facts.codexSignInAttempted ?? false });
   if (id === 'downloading') return { kind: 'harness', harness: 'codex', state: 'downloading', percent: facts.codex.percent ?? 0 };
   return { kind: 'harness', harness: 'codex', state: id };
+}
+
+export function piTileState(facts: Pick<SetupFacts, 'pi' | 'touched'>): HarnessTileState {
+  if (!facts.touched.pi) return { kind: 'harness', harness: 'pi', state: 'idle' };
+  const mapped = piSetupState(facts.pi).state;
+  if (mapped.harness !== 'pi') return { kind: 'harness', harness: 'pi', state: 'idle' };
+  return { kind: 'harness', harness: 'pi', state: mapped.state };
 }
 
 export function claudeMark(facts: Pick<SetupFacts, 'claude' | 'claudeSettled' | 'touched'>): TileMark | undefined {

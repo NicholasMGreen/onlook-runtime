@@ -12,7 +12,7 @@ import {
   CODE_MAX_LENGTH,
   sanitizeCode,
 } from '@studio/events';
-import { isClaudeConnected, isCodexConnected } from '../agents/mapping.js';
+import { isClaudeConnected, isCodexConnected, isPiConnected } from '../agents/mapping.js';
 import { studio } from '../bridge.js';
 
 export interface HarnessFlight {
@@ -49,7 +49,8 @@ export interface AgentSetupState {
 interface AgentSetupStore extends AgentSetupState {
   applyClaude: (next: ClaudeSetupState, viaTap?: boolean) => void;
   applyCodex: (next: CodexSetupState, viaTap?: boolean) => void;
-  applyPi: (next: PiSetupState) => void;
+  applyPi: (next: PiSetupState, viaTap?: boolean) => void;
+  tapPi: () => Promise<void>;
   checkPi: () => Promise<void>;
   tapClaude: (entryPoint: SetupEntryPoint) => Promise<void>;
   signInClaude: (entryPoint: SetupEntryPoint, browserId?: string) => Promise<void>;
@@ -291,15 +292,34 @@ export const useAgentSetupStore = create<AgentSetupStore>()((set, get) => {
       set({ touched: { claude: false, codex: false, pi: false }, lastConnected: null, code: '', codexSignInAttempted: false });
     },
 
-    applyPi: (next) => {
-      set({ pi: next });
+    applyPi: (next, viaTap = false) => {
+      set((state) => ({
+        pi: next,
+        lastConnected: nextLastConnected(state, 'pi', isPiConnected(state.pi), isPiConnected(next), viaTap),
+      }));
+    },
+
+    tapPi: async () => {
+      set((state) => ({
+        touched: { ...state.touched, pi: true },
+        lastConnected: isPiConnected(state.pi) ? 'pi' : state.lastConnected,
+      }));
+      const request = start('pi', 'detect');
+      try {
+        const next = await studio().piCheck();
+        if (ownsReply('pi', request)) get().applyPi(next, true);
+      } catch {
+        return;
+      } finally {
+        finish('pi', request);
+      }
     },
 
     checkPi: async () => {
       const request = start('pi', 'check');
       try {
         const next = await studio().piCheck();
-        if (ownsReply('pi', request)) get().applyPi(next);
+        if (ownsReply('pi', request)) get().applyPi(next, true);
       } catch {
         return;
       } finally {

@@ -1,24 +1,30 @@
 import type { HarnessId, SetupEntryPoint } from '@studio/events';
 import type { SetupAction, SetupState } from '@studio/onboarding-ui/state';
 import { accountLink, openAccountLink } from '../agents/accountLinks.js';
-import { chatGptSetupState, claudeSetupState, isClaudeConnected, isCodexConnected, type AgentSetupStrings, type MappedSetup } from '../agents/mapping.js';
+import { chatGptSetupState, claudeSetupState, isClaudeConnected, isCodexConnected, piSetupState, type AgentSetupStrings, type MappedSetup } from '../agents/mapping.js';
 import type { AgentSetupState } from './store.js';
 
-export type SetupDialogFacts = Pick<AgentSetupState, 'claude' | 'claudeSettled' | 'codex' | 'code' | 'codexSignInAttempted' | 'inFlight'>;
+export type SetupDialogFacts = Pick<AgentSetupState, 'claude' | 'claudeSettled' | 'codex' | 'code' | 'codexSignInAttempted' | 'inFlight'> & {
+  pi?: AgentSetupState['pi'];
+};
 
 export function mappedSetupFor(harness: HarnessId, facts: SetupDialogFacts, strings: AgentSetupStrings, now = Date.now()): MappedSetup {
   const flight = facts.inFlight[harness];
   // `check` counts too: a Check again drew the in-flight sheet without its shimmer, so the sheet read as hung (ONL-2496).
   const busy = flight.detect || flight.submit || flight.signIn || flight.check;
-  return harness === 'claude'
-    ? claudeSetupState(facts.claude, strings, {
-        code: facts.code,
-        busy,
-        ...(facts.claudeSettled === undefined ? {} : { previous: facts.claudeSettled }),
-        otherReady: isCodexConnected(facts.codex),
-        now,
-      })
-    : chatGptSetupState(facts.codex, strings, { attemptedSignIn: facts.codexSignInAttempted, busy, otherReady: isClaudeConnected(facts.claude) });
+  if (harness === 'claude') {
+    return claudeSetupState(facts.claude, strings, {
+      code: facts.code,
+      busy,
+      ...(facts.claudeSettled === undefined ? {} : { previous: facts.claudeSettled }),
+      otherReady: isCodexConnected(facts.codex),
+      now,
+    });
+  }
+  if (harness === 'pi') {
+    return piSetupState(facts.pi, { busy });
+  }
+  return chatGptSetupState(facts.codex, strings, { attemptedSignIn: facts.codexSignInAttempted, busy, otherReady: isClaudeConnected(facts.claude) });
 }
 
 /** `required` while a login runs: Escape and the backdrop cannot kill it by accident. */
@@ -47,6 +53,7 @@ interface SetupActions {
   signInCodex: (entryPoint?: SetupEntryPoint, browserId?: string) => Promise<void>;
   cancelCodex: () => Promise<void>;
   checkCodex: () => Promise<void>;
+  checkPi?: () => Promise<void>;
 }
 
 export interface SetupDialogDeps {
@@ -123,7 +130,7 @@ export class SetupDialogController {
         this.close();
         return;
       case 'check-again':
-        return isClaude ? actions.checkClaude(this.deps.entryPoint) : actions.checkCodex();
+        return isClaude ? actions.checkClaude(this.deps.entryPoint) : this.deps.harness === 'pi' ? (actions.checkPi?.() ?? Promise.resolve()) : actions.checkCodex();
       case 'open-terminal':
         return this.deps.openTerminal();
       case 'copy':
@@ -144,7 +151,7 @@ export class SetupDialogController {
       case 'set-up':
       case 'download-again':
       case 'try-again':
-        return actions.installCodex();
+        return this.deps.harness === 'pi' ? (actions.checkPi?.() ?? Promise.resolve()) : actions.installCodex();
       default: {
         const exhaustive: never = action;
         return exhaustive;
@@ -154,6 +161,7 @@ export class SetupDialogController {
 
   private cancel(): Promise<void> {
     const actions = this.deps.actions();
+    if (this.deps.harness === 'pi') return Promise.resolve();
     return this.deps.harness === 'claude' ? actions.cancelClaude() : actions.cancelCodex();
   }
 }

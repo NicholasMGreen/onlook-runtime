@@ -38,7 +38,10 @@ export const CHATGPT_SETUP_STATES = [
   'fallback',
 ] as const satisfies readonly ChatGptSetupStateId[];
 
-export type SetupStateId = ClaudeSetupStateId | ChatGptSetupStateId;
+export type PiSetupStateId = 'not-set-up' | 'checking' | 'connected' | 'setup-failed' | 'wont-start' | 'out-of-date';
+export type PiTileStateId = 'idle' | PiSetupStateId;
+
+export type SetupStateId = ClaudeSetupStateId | ChatGptSetupStateId | PiSetupStateId;
 
 /** What a failed check heard; each picks its sheet's copy and footer (ONL-2903). */
 export type CannotConnectCause = 'usage-limit' | 'rate-limited' | 'billing' | 'no-answer' | 'service-error' | 'agent-error' | 'unreachable';
@@ -94,7 +97,10 @@ export type SetupState =
   | { harness: 'codex'; state: 'connected'; email?: string; plan: string }
   | { harness: 'codex'; state: 'setup-failed' | 'wont-start'; detail: string; other?: OtherAgentOffer }
   | { harness: 'codex'; state: 'out-of-date'; detail: string }
-  | { harness: 'codex'; state: 'fallback'; command: string; detail?: string };
+  | { harness: 'codex'; state: 'fallback'; command: string; detail?: string }
+  | { harness: 'pi'; state: 'not-set-up' | 'checking' }
+  | { harness: 'pi'; state: 'connected'; email?: string; plan: string }
+  | { harness: 'pi'; state: 'setup-failed' | 'wont-start' | 'out-of-date'; detail: string; other?: OtherAgentOffer };
 
 export type ClaudeTileStateId = 'idle' | ClaudeSetupStateId;
 export type ChatGptTileStateId = 'idle' | ChatGptSetupStateId;
@@ -108,6 +114,7 @@ export type HarnessTileState =
   | { kind: 'harness'; harness: 'claude'; state: ClaudeTileStateId }
   | { kind: 'harness'; harness: 'codex'; state: Exclude<ChatGptTileStateId, 'downloading'> }
   | { kind: 'harness'; harness: 'codex'; state: 'downloading'; percent: number }
+  | { kind: 'harness'; harness: 'pi'; state: PiTileStateId }
   | { kind: 'coming-soon'; id: ComingSoonId };
 
 export type TileMark = 'attention' | 'connected';
