@@ -68,4 +68,40 @@ rl.on('close', () => process.exit(0));
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('boots against a Pi that never sends a ready record', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'onlook-pi-silent-'));
+    const fakePi = join(dir, 'fake-pi.mjs');
+    // Real Pi has no `ready` record: it answers commands when stdin is read and says nothing on its own.
+    writeFileSync(
+      fakePi,
+      `#!/usr/bin/env node
+import readline from 'node:readline';
+const rl = readline.createInterface({ input: process.stdin });
+rl.on('line', (line) => {
+  const msg = JSON.parse(line);
+  process.stdout.write(JSON.stringify({ type: 'response', id: msg.id, command: msg.type, success: true, data: { sessionId: 'pi-silent-1' } }) + '\\n');
+});
+rl.on('close', () => process.exit(0));
+`,
+    );
+    chmodSync(fakePi, 0o755);
+
+    const transport = new PiTransport({
+      bin: fakePi,
+      cwd: dir,
+      env: { ...process.env },
+      sessionDir: join(dir, 'sessions'),
+      guardExtensionPath: join(dir, 'onlook-guard.mjs'),
+    });
+
+    try {
+      await transport.ready;
+      const res = await transport.sendCommand('get_state');
+      assert.equal(res.data?.['sessionId'], 'pi-silent-1');
+    } finally {
+      await transport.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

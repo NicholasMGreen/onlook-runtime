@@ -77,6 +77,11 @@ export class PiTransport {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
+    // Real Pi has no `ready` record: it answers commands as soon as stdin is read, and waiting for a frame it never sends left every turn waiting on a boot that never finished.
+    this.child.once('spawn', () => {
+      this.markReady();
+    });
+
     this.child.stdout?.setEncoding('utf8');
     this.child.stdout?.on('data', (chunk: string) => {
       this.onStdout(chunk);
@@ -181,11 +186,7 @@ export class PiTransport {
     const type = typeof frame['type'] === 'string' ? frame['type'] : '';
 
     if (type === 'ready') {
-      if (!this.readyResolved) {
-        this.readyResolved = true;
-        this.resolveReady?.();
-        this.handlers.onReady?.();
-      }
+      this.markReady();
       return;
     }
 
@@ -208,6 +209,13 @@ export class PiTransport {
     }
 
     this.handlers.onEvent?.(frame);
+  }
+
+  private markReady(): void {
+    if (this.readyResolved) return;
+    this.readyResolved = true;
+    this.resolveReady?.();
+    this.handlers.onReady?.();
   }
 
   private failAll(err: Error): void {
